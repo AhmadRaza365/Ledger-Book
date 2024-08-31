@@ -3,6 +3,7 @@ import { FaUserFriends } from "react-icons/fa";
 import { FaTruckFast } from "react-icons/fa6";
 import { IoHome, IoLogOut } from "react-icons/io5";
 import { MdAddBox } from "react-icons/md";
+import { RiUserSettingsFill } from "react-icons/ri";
 import { Link } from "react-router-dom";
 
 type Props = {
@@ -27,9 +28,14 @@ function SideBar({ activePage }: Props) {
       link: "/order/new",
     },
     {
-      name: "Users",
+      name: "Customers",
       icon: <FaUserFriends size={20} />,
-      link: "/users",
+      link: "/customers",
+    },
+    {
+      name: "System Users",
+      icon: <RiUserSettingsFill size={20} />,
+      link: "/system-users",
     },
   ];
 
@@ -53,7 +59,7 @@ function SideBar({ activePage }: Props) {
       })}
       <div
         className={` py-2.5 px-4 rounded flex items-center gap-x-2 bg-white hover:bg-black/5 text-black mt-auto cursor-pointer`}
-        onClick={()=>{
+        onClick={() => {
           Logout();
         }}
       >

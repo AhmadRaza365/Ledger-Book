@@ -1,30 +1,35 @@
+// Ledger Order
 type OrderType = {
+  id: string;
+  orderNo: string;
+  orderDate: string;
+  customerID: string;
+  customerName: string;
+  totalAmount: number;
+  paidAmount: number;
+  createdAt: string;
+  updatedAt: string;
+  products: {
     id: string;
-    weight: number;
-    isWithCustomPackaging: boolean;
-    sender: {
-        name: string;
-        phone: string;
-        email: string;
-        city: string;
-        address: string;
-    };
-    receiver: {
-        name: string;
-        phone: string;
-        email: string;
-        city: string;
-        address: string;
-    };
-    status: "pending" | "shipped" | "delivered" | "cancelled" | "returned";
-    createdAt: string;
-    updates: {
-        createdAt: string;
-        location: string;
-        message: string;
-    }[];
-    paymentOption: "cod" | "prepaid";
-    orderAmount: number;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+  }[];
+
+  // Ledger Order Payment
+  orderPayments: {
+    id: string;
+    paymentDate: string;
+    paymentAmount: number;
+  }[];
+
+  delivery: {
+    deliveryDate: string;
+    deliveryPersonName: string;
+    deliveryPersonPhoneNo: string;
+    deliveryAddress: string;
+    deliveryTruckNo: string;
+  };
 };
 
-export type { OrderType }
+export type { OrderType };

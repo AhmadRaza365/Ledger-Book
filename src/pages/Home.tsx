@@ -7,9 +7,6 @@ export default function Home() {
 
   return (
     <main className='pt-20'>
-      <h1 className='text-4xl font-bold text-primary text-center'>
-        Welcome to the Logistics Management App
-      </h1>
       <section className="flex items-center justify-center gap-8 mt-20">
         <section className="w-96 aspect-video bg-white shadow-lg border border-black/10 rounded-xl flex items-center flex-col justify-center gap-5 cursor-pointer"
           onClick={() => {

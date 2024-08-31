@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Scroll Bar Style */
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 4px;
+  background-color: #ffffff;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #3a3a3a;
+  border-radius: 20px;
+}
+
+.slideUpFadeInAnimation {
+  animation: slideUpFadeIn 0.7s ease-in-out;
+}
+
+/* CSS for the animation */
+@keyframes slideUpFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(120px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

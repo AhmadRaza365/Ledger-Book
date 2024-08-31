@@ -1,6 +1,10 @@
+import Loader from "@/components/Loader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SendPasswordReset, loginWithEmailPassword } from "@/lib/Firebase/Services/Auth";
+import {
+  SendPasswordReset,
+  loginWithEmailPassword,
+} from "@/lib/Firebase/Services/Auth";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -46,7 +50,6 @@ function Login() {
         toast.error(res.message);
       }
       setResettingPassword(false);
-
     } catch (error: any) {
       setResettingPassword(false);
       toast.error(error?.message ?? "Something went wrong. Please try again.");
@@ -106,7 +109,11 @@ function Login() {
               disabled={loggingIn}
               type="submit"
             >
-              {loggingIn ? "Logging In..." : "Login"}
+              {loggingIn ? (
+                <Loader width={20} borderWidth={2} color="secondary" />
+              ) : (
+                "Login"
+              )}
             </Button>
           </form>
         ) : (
@@ -127,7 +134,11 @@ function Login() {
               disabled={resettingPassword}
               onClick={() => sendResetPasswordEmail(email)}
             >
-              Reset Password
+              {resettingPassword ? (
+                <Loader width={20} borderWidth={2} color="secondary" />
+              ) : (
+                "Reset Password"
+              )}
             </Button>
 
             <Button

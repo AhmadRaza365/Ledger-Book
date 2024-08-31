@@ -21,6 +21,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import OnBoardingModel from "@/components/models/OnBoardingModel";
 import Loader from "./components/Loader";
+import Customers from "./pages/Customers";
 
 function App() {
   const dispatch = useDispatch();
@@ -157,6 +158,18 @@ function App() {
               }
             />
 
+            <Route
+              path="/customers"
+              element={
+                <DashboardLayout
+                  pageName="Customers"
+                  children={<Customers />}
+                  isLoggedin={isLoggedIn}
+                  fetchingUserData={fetchingUserData}
+                />
+              }
+            />
+            
             <Route
               path="/users"
               element={
