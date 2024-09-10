@@ -281,7 +281,7 @@ function OrderDetails() {
                 data={order.products}
                 customStyles={customStyles}
                 noDataComponent={
-                  <div className="flex flex-col items-center justify-center h-[50vh]">
+                  <div className="flex flex-col items-center justify-center py-10">
                     <p className="p-2 font-semibold text-xl 2xl:text-2xl">
                       No Products Found
                     </p>
@@ -300,7 +300,7 @@ function OrderDetails() {
                 data={order.orderPayments}
                 customStyles={customStyles}
                 noDataComponent={
-                  <div className="flex flex-col items-center justify-center h-[50vh]">
+                  <div className="flex flex-col items-center justify-center py-10">
                     <p className="p-2 font-semibold text-xl 2xl:text-2xl">
                       No Payments are made yet
                     </p>

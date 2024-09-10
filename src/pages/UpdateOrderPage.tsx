@@ -175,14 +175,6 @@ function UpdateOrderPage() {
       products.length > 0 &&
       products.every(
         (product) => product.productName && product.unitPrice && product.weight
-      ) &&
-      orderPayments.every(
-        (payment) =>
-          payment.paymentAmount &&
-          payment.paymentDate &&
-          payment.payeeName &&
-          payment.receivedBy &&
-          payment.paymentMethod
       )
     ) {
       try {
@@ -425,22 +417,22 @@ function UpdateOrderPage() {
                             phone.includes(searchCustomer.toLowerCase())
                           )
                       ).length === 0 && (
-                        <section className="px-5 py-10">
-                          <p className="text-sm mb-4 text-center">
-                            No customer found
-                          </p>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setShowSearchResults(false);
-                              setShowAddNewCustomer(true);
-                            }}
-                            className="w-full"
-                          >
-                            Add New Customer
-                          </Button>
-                        </section>
-                      )}
+                          <section className="px-5 py-10">
+                            <p className="text-sm mb-4 text-center">
+                              No customer found
+                            </p>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setShowSearchResults(false);
+                                setShowAddNewCustomer(true);
+                              }}
+                              className="w-full"
+                            >
+                              Add New Customer
+                            </Button>
+                          </section>
+                        )}
                     </section>
                   )}
                 </section>
@@ -807,8 +799,8 @@ function UpdateOrderPage() {
                       {payment.paymentMethod === "Cash"
                         ? "Description"
                         : payment.paymentMethod === "Cheque"
-                        ? "Cheque No"
-                        : "Reference ID"}
+                          ? "Cheque No"
+                          : "Reference ID"}
                       <Input
                         type="text"
                         id={`paymentReference-${index}`}
@@ -816,8 +808,8 @@ function UpdateOrderPage() {
                           payment.paymentMethod === "Cash"
                             ? "Description"
                             : payment.paymentMethod === "Cheque"
-                            ? "Cheque No"
-                            : "Reference ID"
+                              ? "Cheque No"
+                              : "Reference ID"
                         }
                         value={payment.paymentReference}
                         onChange={(e) => {

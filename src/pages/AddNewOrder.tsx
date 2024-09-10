@@ -135,11 +135,6 @@ function AddNewOrder() {
       products.every(
         (product) => product.productName && product.unitPrice && product.weight
       )
-      &&
-      orderPayments.every(
-        (payment) =>
-          payment.paymentAmount && payment.paymentDate && payment.payeeName && payment.receivedBy && payment.paymentMethod
-      )
     ) {
       try {
         setIsCreatingOrder(true);
