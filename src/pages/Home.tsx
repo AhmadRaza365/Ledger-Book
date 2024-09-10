@@ -20,12 +20,12 @@ export default function Home() {
         </section>
         <section className="w-96 aspect-video bg-white shadow-lg border border-black/10 rounded-xl flex items-center flex-col justify-center gap-5  cursor-pointer"
           onClick={() => {
-            navigate("/users")
+            navigate("/customers")
           }}
         >
           <FaUserFriends size={60} className="text-primary" />
           <p className="text-xl font-bold text-primary">
-            Manage Users
+            Manage Customers
           </p>
         </section>
       </section>

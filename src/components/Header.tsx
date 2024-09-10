@@ -14,7 +14,7 @@ function Header({ isLoggedIn }: props) {
         className="text-black hover:text-primary text-lg font-normal"
       >
         <h1 className="text-xl lg:text-2xl font-bold text-primary">
-          Ledger Book
+          {import.meta.env.VITE_APP_APP_NAME}
         </h1>
       </Link>
       <div className="hidden lg:flex items-center justify-end gap-x-2">

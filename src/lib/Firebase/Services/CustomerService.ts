@@ -22,7 +22,7 @@ async function GetAllCustomers(): Promise<CustomerType[]> {
 }
 
 async function GetCustomerById(id: string): Promise<CustomerType> {
-  const q = query(collection(db, "customers"), where("id", "==", id));
+  const q = query(collection(db, "customers"), where("uuid", "==", id));
   const docs = await getDocs(q);
   if (docs.size === 0) {
     throw new Error("No Customer found with the given ID");
@@ -32,7 +32,7 @@ async function GetCustomerById(id: string): Promise<CustomerType> {
 }
 
 async function UpdateCustomer(customer: CustomerType): Promise<void> {
-  const q = query(collection(db, "customers"), where("id", "==", customer.id));
+  const q = query(collection(db, "customers"), where("uuid", "==", customer.uuid));
   const docs = await getDocs(q);
 
   if (docs.docs.length === 0) {
@@ -47,7 +47,7 @@ async function UpdateCustomer(customer: CustomerType): Promise<void> {
 }
 
 async function DeleteCustomer(id: string): Promise<void> {
-  const q = query(collection(db, "customers"), where("id", "==", id));
+  const q = query(collection(db, "customers"), where("uuid", "==", id));
 
   const docs = await getDocs(q);
   if (docs.size === 0) {

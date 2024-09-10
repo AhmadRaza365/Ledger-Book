@@ -78,7 +78,7 @@ function CustomerFormModel({
   return (
     <section className="fixed top-0 left-0 w-full h-full bg-black/30 z-50 backdrop-blur-sm flex items-center justify-center">
       <form
-        className="w-full max-w-lg h-fit px-6 py-10 bg-white rounded-xl shadow-xl relative"
+        className="w-full max-w-lg h-fit px-6 py-10 bg-white rounded-xl shadow-xl relative slideUpFadeInAnimation"
         onSubmit={(e) => {
           e.preventDefault();
           if (formType === "Add") {
@@ -120,7 +120,7 @@ function CustomerFormModel({
             {phoneNo.map((phone, index) => (
               <div key={index} className="relative flex items-center">
                 <Input
-                  type="text"
+                  type="tel"
                   placeholder="Enter phone number"
                   value={phone}
                   onChange={(e) => {

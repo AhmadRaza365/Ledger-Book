@@ -1,35 +1,46 @@
 // Ledger Order
 type OrderType = {
-  id: string;
+  uuid: string;
   orderNo: string;
   orderDate: string;
+  dueDate: string;
   customerID: string;
   customerName: string;
+  customerPhoneNo: string[];
+  customerAddress: string;
   totalAmount: number;
   paidAmount: number;
   createdAt: string;
   updatedAt: string;
-  products: {
-    id: string;
-    productName: string;
-    quantity: number;
-    unitPrice: number;
-  }[];
-
+  products: ProductType[];
   // Ledger Order Payment
-  orderPayments: {
-    id: string;
-    paymentDate: string;
-    paymentAmount: number;
-  }[];
-
+  orderPayments: PaymentType[];
   delivery: {
     deliveryDate: string;
     deliveryPersonName: string;
-    deliveryPersonPhoneNo: string;
+    deliveryPersonPhoneNo: string[];
     deliveryAddress: string;
     deliveryTruckNo: string;
+    deliveryStatus: string;
   };
 };
 
-export type { OrderType };
+
+type ProductType = {
+  id: string;
+  productName: string;
+  weight: number;
+  unitPrice: number;
+};
+
+type PaymentType = {
+  id: string;
+  paymentDate: string;
+  paymentAmount: number;
+  paymentMethod: "Cash" | "Cheque" | "JazzCash" | "EasyPaisa" | "Bank Transfer";
+  paymentReference: string;
+  payeeName: string;
+  receivedBy: string;
+}
+
+export type { OrderType, ProductType, PaymentType};

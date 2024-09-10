@@ -88,7 +88,7 @@ function OnBoardingModel() {
   return (
     <section className="fixed top-0 left-0 w-full h-full bg-black/30 z-50 backdrop-blur-sm flex items-center justify-center">
       <form
-        className="w-full max-w-lg h-fit px-6 py-6 bg-white rounded-xl shadow-xl"
+        className="w-full max-w-lg h-fit px-6 py-6 bg-white rounded-xl shadow-xl slideUpFadeInAnimation"
         onSubmit={(e) => {
           e.preventDefault();
           registerUser();

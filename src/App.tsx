@@ -22,6 +22,10 @@ import { useDispatch, useSelector } from "react-redux";
 import OnBoardingModel from "@/components/models/OnBoardingModel";
 import Loader from "./components/Loader";
 import Customers from "./pages/Customers";
+import Orders from "./pages/Orders";
+import AddNewOrder from "./pages/AddNewOrder";
+import OrderDetails from "./pages/OrderDetails";
+import UpdateOrderPage from "./pages/UpdateOrderPage";
 
 function App() {
   const dispatch = useDispatch();
@@ -138,8 +142,29 @@ function App() {
               element={
                 <DashboardLayout
                   pageName="Orders"
-                  // children={<Orders />}
-                  children={<h1>Orders</h1>}
+                  children={<Orders />}
+                  isLoggedin={isLoggedIn}
+                  fetchingUserData={fetchingUserData}
+                />
+              }
+            />
+            <Route
+              path="/order/:id"
+              element={
+                <DashboardLayout
+                  pageName="Orders"
+                  children={<OrderDetails />}
+                  isLoggedin={isLoggedIn}
+                  fetchingUserData={fetchingUserData}
+                />
+              }
+            />
+            <Route
+              path="/order/update/:id"
+              element={
+                <DashboardLayout
+                  pageName="Orders"
+                  children={<UpdateOrderPage />}
                   isLoggedin={isLoggedIn}
                   fetchingUserData={fetchingUserData}
                 />
@@ -150,8 +175,7 @@ function App() {
               element={
                 <DashboardLayout
                   pageName="Add New Order"
-                  // children={<CreateOrder />}
-                  children={<h1>Create Order</h1>}
+                  children={<AddNewOrder />}
                   isLoggedin={isLoggedIn}
                   fetchingUserData={fetchingUserData}
                 />
@@ -169,7 +193,7 @@ function App() {
                 />
               }
             />
-            
+
             <Route
               path="/users"
               element={

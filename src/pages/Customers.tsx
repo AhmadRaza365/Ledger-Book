@@ -172,7 +172,7 @@ export default function Customers() {
   return (
     <main>
       <section className="flex items-center gap-x-4">
-        <h1 className="text-2xl font-semibold">All Orders</h1>
+        <h1 className="text-2xl font-semibold">All Customers</h1>
         <Button
           size={"sm"}
           onClick={() => {
@@ -185,7 +185,7 @@ export default function Customers() {
 
       <section className="max-w-md flex items-center relative mt-8">
         <Input
-          placeholder="Search Customers"
+          placeholder="Search Customers by Name or Phone No"
           type="search"
           className="pl-10"
           value={searchValue}

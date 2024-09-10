@@ -21,8 +21,8 @@
 /* CSS for the animation */
 @keyframes slideUpFadeIn {
   from {
-    opacity: 0;
-    transform: translateY(120px);
+    opacity: 0.5;
+    transform: translateY(50px);
   }
   to {
     opacity: 1;
