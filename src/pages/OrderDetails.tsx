@@ -1,7 +1,9 @@
 import Loader from "@/components/Loader";
 import { Button } from "@/components/ui/button";
+import { GetCustomerById } from "@/lib/Firebase/Services/CustomerService";
 import { GetOrderById } from "@/lib/Firebase/Services/OrderService";
 import { formatDate, getTimeFromDate } from "@/lib/formatDate";
+import { CustomerType } from "@/types/CustomerType";
 import { OrderType, ProductType, PaymentType } from "@/types/OrderType";
 import { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
@@ -13,12 +15,21 @@ function OrderDetails() {
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<OrderType | null>(null);
+  const [customer, setCustomer] = useState<CustomerType | null>(null);
   const navigate = useNavigate();
   const fetchOrderDetails = async (orderId: string) => {
     try {
       setLoading(true);
       const res = await GetOrderById(orderId);
+      const customerRes = await GetCustomerById(res.customerID);
       setOrder(res);
+      setCustomer(customerRes ?? {
+        address: res.customerAddress,
+        id: res.customerID,
+        name: res.customerName,
+        phoneNo: res.customerPhoneNo,
+        uuid: res.customerID,
+      });
       setLoading(false);
     } catch (error: any) {
       setLoading(false);
@@ -162,7 +173,7 @@ function OrderDetails() {
         <section className="col-span-full w-full h-96 py-20 flex items-center justify-center text-lg gap-x-2">
           <Loader width={50} borderWidth={3} color="primary" />
         </section>
-      ) : order ? (
+      ) : order && customer ? (
         <>
           <section className="flex items-center gap-x-2">
             <button
@@ -207,9 +218,9 @@ function OrderDetails() {
                     <span className="font-semibold">Due Date: </span>
                     {order.dueDate
                       ? formatDate({
-                          unformatedDate: order.dueDate,
-                          format: "DD MMM YYYY",
-                        })
+                        unformatedDate: order.dueDate,
+                        format: "DD MMM YYYY",
+                      })
                       : "N/A"}
                   </p>
                 </section>
@@ -221,15 +232,15 @@ function OrderDetails() {
                   <h2 className="text-xl font-semibold mb-2">Customer</h2>
                   <p className="text-lg font-normal">
                     <span className="font-semibold">Name: </span>
-                    {order.customerName ?? "N/A"}
+                    {customer.name ?? "N/A"}
                   </p>
                   <p className="text-lg font-normal">
                     <span className="font-semibold">Phone Number: </span>
-                    {order.customerPhoneNo.join(", ") ?? "N/A"}
+                    {customer.phoneNo.join(", ") ?? "N/A"}
                   </p>
                   <p className="text-lg font-normal">
                     <span className="font-semibold">Address: </span>
-                    {order.customerAddress ?? "N/A"}
+                    {customer.address ?? "N/A"}
                   </p>
                 </section>
               </section>
@@ -263,11 +274,11 @@ function OrderDetails() {
                   <span className="font-semibold">Delivery Date: </span>
                   {order.delivery.deliveryDate
                     ? formatDate({
-                        unformatedDate: order.delivery.deliveryDate,
-                        format: "DD MMM YYYY",
-                      }) +
-                      " - " +
-                      getTimeFromDate(order.delivery.deliveryDate)
+                      unformatedDate: order.delivery.deliveryDate,
+                      format: "DD MMM YYYY",
+                    }) +
+                    " - " +
+                    getTimeFromDate(order.delivery.deliveryDate)
                     : "N/A"}
                 </p>
               </section>
@@ -345,8 +356,8 @@ function OrderDetails() {
                           {data.paymentMethod === "Cheque"
                             ? "Cheque No"
                             : data.paymentMethod === "Cash"
-                            ? "Desc"
-                            : "Reference ID"}
+                              ? "Desc"
+                              : "Reference ID"}
                           :{" "}
                         </span>
                         {data.paymentReference}
