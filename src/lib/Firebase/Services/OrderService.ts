@@ -33,6 +33,22 @@ async function GetTotalOrdersNumber(): Promise<number> {
   return docs.size;
 }
 
+async function GetAllOrdersByCustomerId(customerId: string): Promise<OrderType[]> {
+  const q = query(collection(db, "orders"), where("customerID", "==", customerId));
+  const docs = await getDocs(q);
+  const orders: OrderType[] = [];
+  docs.forEach((doc) => {
+    orders.push(doc.data() as OrderType);
+  });
+
+  // Sort orders by date - newest first
+  const sortedOrders = orders.sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  return sortedOrders;
+}
+
 async function GetOrderById(id: string): Promise<OrderType> {
   const q = query(collection(db, "orders"), where("uuid", "==", id));
   const docs = await getDocs(q);
@@ -78,6 +94,7 @@ async function AddOrder(order: OrderType): Promise<void> {
 
 export {
   GetAllOrders,
+  GetAllOrdersByCustomerId,
   GetTotalOrdersNumber,
   GetOrderById,
   UpdateOrder,

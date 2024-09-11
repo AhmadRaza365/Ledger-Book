@@ -26,6 +26,7 @@ import Orders from "./pages/Orders";
 import AddNewOrder from "./pages/AddNewOrder";
 import OrderDetails from "./pages/OrderDetails";
 import UpdateOrderPage from "./pages/UpdateOrderPage";
+import CustomerDetails from "./pages/CustomerDetails";
 
 function App() {
   const dispatch = useDispatch();
@@ -188,6 +189,18 @@ function App() {
                 <DashboardLayout
                   pageName="Customers"
                   children={<Customers />}
+                  isLoggedin={isLoggedIn}
+                  fetchingUserData={fetchingUserData}
+                />
+              }
+            />
+            
+            <Route
+              path="/customer/:id"
+              element={
+                <DashboardLayout
+                  pageName="Customers"
+                  children={<CustomerDetails />}
                   isLoggedin={isLoggedIn}
                   fetchingUserData={fetchingUserData}
                 />

@@ -78,7 +78,7 @@ export default function Customers() {
               className="w-fit h-fit rounded-md bg-primary p-2 text-white"
               onClick={() => {
                 setSelectedCustomer(row);
-                navigate(`/customers/${row.uuid}`);
+                navigate(`/customer/${row.uuid}`);
               }}
             >
               <FaEye size={20} />
@@ -227,7 +227,7 @@ export default function Customers() {
           striped
           pagination
           onRowClicked={(row: CustomerType) => {
-            navigate(`/customers/${row.uuid}`);
+            navigate(`/customer/${row.uuid}`);
           }}
         />
       </section>

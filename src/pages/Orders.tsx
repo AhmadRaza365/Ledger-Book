@@ -15,54 +15,13 @@ import { FaEye } from "react-icons/fa";
 import { IoSearchOutline } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import jsonToCsvExport from "json-to-csv-export";
 
 function Orders() {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState<OrderType[]>([
-    {
-      createdAt: "2021-09-01T00:00:00.000Z",
-      customerID: "1",
-      customerName: "John Doe",
-      customerPhoneNo: ["03001312712"],
-      customerAddress: "123, Main Street, New York",
-      dueDate: "2021-09-01T00:00:00.000Z",
-      delivery: {
-        deliveryAddress: "123, Main Street, New York",
-        deliveryDate: "2021-09-01T00:00:00.000Z",
-        deliveryPersonName: "John Doe",
-        deliveryPersonPhoneNo: ["1234567890"],
-        deliveryTruckNo: "MNL 1234",
-        deliveryStatus: "Delivered",
-      },
-      uuid: "1",
-      orderDate: "2021-09-01T00:00:00.000Z",
-      orderNo: "1",
-      orderPayments: [
-        {
-          id: "1",
-          paymentAmount: 1000,
-          paymentDate: "2021-09-01T00:00:00.000Z",
-          payeeName: "John Doe",
-          paymentMethod: "Cash",
-          paymentReference: "123456",
-          receivedBy: "John Doe",
-        },
-      ],
-      paidAmount: 1000,
-      products: [
-        {
-          id: "1",
-          productName: "Product 1",
-          unitPrice: 1000,
-          weight: 1,
-        },
-      ],
-      totalAmount: 1000,
-      updatedAt: "2021-09-01T00:00:00.000Z",
-    },
-  ]);
+  const [orders, setOrders] = useState<OrderType[]>([]);
 
   const [selectedOrder, setSelectedOrder] = useState<OrderType | null>(null);
   const [deletingOrder, setDeletingOrder] = useState(false);
@@ -74,9 +33,7 @@ function Orders() {
       selector: (row: OrderType) => row.orderNo,
       sortable: true,
       cell: (row: OrderType) => (
-        <p className="flex items-center gap-x-1.5 text-base">
-          {row.orderNo}
-        </p>
+        <p className="flex items-center gap-x-1.5 text-base">{row.orderNo}</p>
       ),
       minWidth: "80px",
       maxWidth: "80px",
@@ -146,7 +103,9 @@ function Orders() {
     },
     {
       name: (
-        <span className="font-semibold text-base text-left">Remaining Amount</span>
+        <span className="font-semibold text-base text-left">
+          Remaining Amount
+        </span>
       ),
       selector: (row: OrderType) => row.totalAmount - row.paidAmount,
       sortable: true,
@@ -270,6 +229,42 @@ function Orders() {
           }}
         >
           Add New Order
+        </Button>
+        <Button
+          size={"sm"}
+          onClick={() => {
+            const config = {
+              data: orders.map((order) => ({
+                ID: order.orderNo,
+                Date: formatDate({
+                  format: "DD MMM YYYY",
+                  unformatedDate: order.orderDate,
+                }),
+                "Customer Name": order.customerName,
+                "Phone No": order.customerPhoneNo[0],
+                "Truck No": order.delivery.deliveryTruckNo,
+                "Total Amount": order.totalAmount,
+                "Remaining Amount": order.totalAmount - order.paidAmount,
+              })),
+              filename: "orders",
+              delimiter: ",",
+              headers: [
+                "ID",
+                "Date",
+                "Customer Name",
+                "Phone No",
+                "Truck No",
+                "Total Amount",
+                "Remaining Amount",
+              ],
+            };
+
+            jsonToCsvExport(config);
+          }}
+          variant={"outline"}
+          className="ml-auto"
+        >
+          Download CSV
         </Button>
       </section>
 

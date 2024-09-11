@@ -168,7 +168,7 @@ function OrderDetails() {
             <button
               className="w-fit h-fit cursor-pointer -mb-1"
               onClick={() => {
-                navigate("/orders");
+                window.history.back();
               }}
             >
               <GoArrowLeft size={30} />
