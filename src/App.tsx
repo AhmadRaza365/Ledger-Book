@@ -207,7 +207,7 @@ function App() {
               }
             />
 
-            <Route
+            {/* <Route
               path="/users"
               element={
                 <DashboardLayout
@@ -218,7 +218,7 @@ function App() {
                   fetchingUserData={fetchingUserData}
                 />
               }
-            />
+            /> */}
           </Routes>
 
           {showOnBoarding && (

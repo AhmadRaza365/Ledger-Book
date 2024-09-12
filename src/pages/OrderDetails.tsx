@@ -10,9 +10,18 @@ import DataTable from "react-data-table-component";
 import toast from "react-hot-toast";
 import { GoArrowLeft } from "react-icons/go";
 import { useNavigate, useParams } from "react-router-dom";
+import { usePDF } from "react-to-pdf";
 
 function OrderDetails() {
   const { id } = useParams<{ id: string }>();
+  const { toPDF, targetRef } = usePDF({
+    filename: "order.pdf",
+    page: {
+      margin: 14,
+      format: "a4",
+    },
+  });
+
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<OrderType | null>(null);
   const [customer, setCustomer] = useState<CustomerType | null>(null);
@@ -23,13 +32,15 @@ function OrderDetails() {
       const res = await GetOrderById(orderId);
       const customerRes = await GetCustomerById(res.customerID);
       setOrder(res);
-      setCustomer(customerRes ?? {
-        address: res.customerAddress,
-        id: res.customerID,
-        name: res.customerName,
-        phoneNo: res.customerPhoneNo,
-        uuid: res.customerID,
-      });
+      setCustomer(
+        customerRes ?? {
+          address: res.customerAddress,
+          id: res.customerID,
+          name: res.customerName,
+          phoneNo: res.customerPhoneNo,
+          uuid: res.customerID,
+        }
+      );
       setLoading(false);
     } catch (error: any) {
       setLoading(false);
@@ -174,7 +185,7 @@ function OrderDetails() {
           <Loader width={50} borderWidth={3} color="primary" />
         </section>
       ) : order && customer ? (
-        <>
+        <section className="w-full h-full">
           <section className="flex items-center gap-x-2">
             <button
               className="w-fit h-fit cursor-pointer -mb-1"
@@ -187,18 +198,31 @@ function OrderDetails() {
             <h1 className="text-2xl font-semibold">
               Order Details # {order.orderNo}
             </h1>
-            <Button
-              variant={"default"}
-              onClick={() => {
-                navigate(`/order/update/${order.uuid}`);
-              }}
-              className="ml-auto"
-            >
-              Update Order
-            </Button>
+
+            <div className="ml-auto flex items-center gap-3">
+              <Button
+                variant={"outline"}
+                onClick={() => {
+                  toPDF();
+                }}
+              >
+                Print PDF
+              </Button>
+              <Button
+                variant={"default"}
+                onClick={() => {
+                  navigate(`/order/update/${order.uuid}`);
+                }}
+              >
+                Update Order
+              </Button>
+            </div>
           </section>
 
-          <section className="w-full my-7 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <section
+            className="w-full my-7 grid grid-cols-1 lg:grid-cols-2 gap-4"
+            ref={targetRef}
+          >
             {/* Order & Customer Details */}
             <section className="w-full flex flex-col gap-4">
               {/* Order Details */}
@@ -218,9 +242,9 @@ function OrderDetails() {
                     <span className="font-semibold">Due Date: </span>
                     {order.dueDate
                       ? formatDate({
-                        unformatedDate: order.dueDate,
-                        format: "DD MMM YYYY",
-                      })
+                          unformatedDate: order.dueDate,
+                          format: "DD MMM YYYY",
+                        })
                       : "N/A"}
                   </p>
                 </section>
@@ -274,11 +298,11 @@ function OrderDetails() {
                   <span className="font-semibold">Delivery Date: </span>
                   {order.delivery.deliveryDate
                     ? formatDate({
-                      unformatedDate: order.delivery.deliveryDate,
-                      format: "DD MMM YYYY",
-                    }) +
-                    " - " +
-                    getTimeFromDate(order.delivery.deliveryDate)
+                        unformatedDate: order.delivery.deliveryDate,
+                        format: "DD MMM YYYY",
+                      }) +
+                      " - " +
+                      getTimeFromDate(order.delivery.deliveryDate)
                     : "N/A"}
                 </p>
               </section>
@@ -356,8 +380,8 @@ function OrderDetails() {
                           {data.paymentMethod === "Cheque"
                             ? "Cheque No"
                             : data.paymentMethod === "Cash"
-                              ? "Desc"
-                              : "Reference ID"}
+                            ? "Desc"
+                            : "Reference ID"}
                           :{" "}
                         </span>
                         {data.paymentReference}
@@ -437,10 +461,10 @@ function OrderDetails() {
               </section>
             </section>
           </section>
-        </>
+        </section>
       ) : (
         <>
-          <section className="w-full h-[80vh] flex flex-col items-center justify-center gap-4">
+          <section className="w-full h-[80vh] flex flex-col items-center justify-center gap-4 ">
             <h1 className="text-2xl font-semibold text-center">
               No order found with the given ID
             </h1>

@@ -18,6 +18,7 @@ import { GoArrowLeft } from "react-icons/go";
 import { MdDelete } from "react-icons/md";
 import { useNavigate, useParams } from "react-router-dom";
 import jsonToCsvExport from "json-to-csv-export";
+import { usePDF } from "react-to-pdf";
 
 export default function CustomerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +35,14 @@ export default function CustomerDetails() {
   const [deletingOrder, setDeletingOrder] = useState(false);
 
   const [showEditCustomer, setShowEditCustomer] = useState(false);
+
+  const { toPDF, targetRef } = usePDF({
+    filename: "customer.pdf",
+    page: {
+      margin: 14,
+      format: "a4",
+    },
+  });
 
   const fetchData = async (customerId: string) => {
     try {
@@ -263,23 +272,38 @@ export default function CustomerDetails() {
             <h1 className="text-2xl font-semibold">
               Customer Details - {customer.name}
             </h1>
+
+            <div className="ml-auto flex items-center gap-3">
+              <Button
+                variant={"outline"}
+                onClick={() => {
+                  toPDF();
+                }}
+                className=""
+              >
+                Print PDF
+              </Button>
+              <Button
+                variant={"default"}
+                size={"sm"}
+                onClick={() => {
+                  setShowEditCustomer(true);
+                }}
+              >
+                Update Customer
+              </Button>
+            </div>
           </section>
 
-          <section className="w-full my-7 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <section
+            className="w-full my-7 grid grid-cols-1 lg:grid-cols-2 gap-4"
+            ref={targetRef}
+          >
             {/* Customer Details */}
             <section className="border w-full flex flex-col gap-4 px-5 pt-4 pb-6 rounded-lg shadow-md">
               <section className="flex flex-col gap-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-xl font-semibold mb-2">Customer</h2>
-                  <Button
-                    variant={"default"}
-                    size={"sm"}
-                    onClick={() => {
-                      setShowEditCustomer(true);
-                    }}
-                  >
-                    Update Customer
-                  </Button>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-semibold">Customer</h2>
                 </div>
 
                 <p className="text-lg font-normal">
