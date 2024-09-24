@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 // import { Button } from "./ui/button";
 
 type props = {
@@ -7,6 +8,12 @@ type props = {
 }
 
 function Header({ isLoggedIn }: props) {
+
+  useEffect(() => {
+    // Set Meta title on component mount
+    document.title = import.meta.env.VITE_APP_APP_NAME ?? "Ledger Book";
+  }, []);
+
   return (
     <header className="w-full sticky top-0 left-0 z-30 bg-primary/10 backdrop-blur-md flex justify-between items-center px-10 py-3 shadow-xl">
       <Link
