@@ -161,7 +161,8 @@ export default function CustomerDetails() {
       sortable: true,
       cell: (row: OrderType) => (
         <p className="flex items-center gap-x-1.5 text-base">
-          PKR {row?.totalAmount}
+          PKR{" "}
+          {row?.totalAmount?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
         </p>
       ),
       minWidth: "140px",
@@ -176,7 +177,10 @@ export default function CustomerDetails() {
       sortable: true,
       cell: (row: OrderType) => (
         <p className="flex items-center gap-x-1.5 text-base">
-          PKR {row?.totalAmount - row.paidAmount}
+          PKR{" "}
+          {(row?.totalAmount - row.paidAmount)
+            ?.toString()
+            ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
         </p>
       ),
       minWidth: "200px",
@@ -331,13 +335,19 @@ export default function CustomerDetails() {
                 </p>
                 <p className="text-lg font-normal">
                   <span className="font-semibold">Total Orders Amount: </span>
-                  PKR {totalOrdersAmount}
+                  PKR{" "}
+                  {totalOrdersAmount
+                    ?.toString()
+                    ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 </p>
                 <p className="text-lg font-normal">
                   <span className="font-semibold">
                     Total Remaining Amount:{" "}
                   </span>
-                  PKR {totalRemainingAmount}
+                  PKR{" "}
+                  {totalRemainingAmount
+                    ?.toString()
+                    ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 </p>
               </section>
             </section>

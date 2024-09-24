@@ -87,7 +87,8 @@ function OrderDetails() {
       selector: (row: ProductType) => row.unitPrice,
       cell: (row: ProductType) => (
         <p className="flex items-center gap-x-1.5 text-base">
-          PKR {row?.unitPrice}
+          PKR{" "}
+          {row?.unitPrice?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
         </p>
       ),
       minWidth: "105px",
@@ -99,7 +100,10 @@ function OrderDetails() {
       selector: (row: ProductType) => row.unitPrice * row.weight,
       cell: (row: ProductType) => (
         <p className="flex items-center gap-x-1.5 text-base">
-          PKR {row?.weight * row?.unitPrice}
+          PKR{" "}
+          {(row?.weight * row?.unitPrice)
+            ?.toString()
+            ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
         </p>
       ),
       minWidth: "100px",
@@ -127,7 +131,10 @@ function OrderDetails() {
       selector: (row: PaymentType) => row.paymentAmount,
       cell: (row: PaymentType) => (
         <p className="flex items-center gap-x-1.5 text-base">
-          PKR {row?.paymentAmount}
+          PKR{" "}
+          {row?.paymentAmount
+            ?.toString()
+            ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
         </p>
       ),
       minWidth: "120px",
@@ -413,7 +420,10 @@ function OrderDetails() {
                         </p>
 
                         <p className="text-base font-normal">
-                          PKR {product.unitPrice * product.weight}
+                          PKR{" "}
+                          {(product.unitPrice * product.weight)
+                            ?.toString()
+                            ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                         </p>
                       </section>
                     );
@@ -426,36 +436,46 @@ function OrderDetails() {
                   <p className="text-lg font-semibold">Total Amount</p>
                   <p className="text-lg font-semibold">
                     PKR{" "}
-                    {order.products.reduce(
-                      (acc, product) =>
-                        acc + (product.unitPrice * product.weight || 0),
-                      0
-                    )}
+                    {order.products
+                      .reduce(
+                        (acc, product) =>
+                          acc + (product.unitPrice * product.weight || 0),
+                        0
+                      )
+                      ?.toString()
+                      ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                   </p>
                 </section>
                 <section className="flex items-center justify-between gap-5 border-b-2 border-dashed pb-3">
                   <p className="text-lg font-semibold">Total Paid Amount</p>
                   <p className="text-lg font-semibold">
                     - PKR{" "}
-                    {order.orderPayments.reduce(
-                      (acc, payment) => acc + payment.paymentAmount || 0,
-                      0
-                    )}
+                    {order.orderPayments
+                      .reduce(
+                        (acc, payment) => acc + payment.paymentAmount || 0,
+                        0
+                      )
+                      ?.toString()
+                      ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                   </p>
                 </section>
                 <section className="flex items-center justify-between gap-5">
                   <p className="text-lg font-semibold">Remaining Amount</p>
                   <p className="text-lg font-semibold">
                     PKR{" "}
-                    {order.products.reduce(
-                      (acc, product) =>
-                        acc + (product.unitPrice * product.weight || 0),
-                      0
-                    ) -
+                    {(
+                      order.products.reduce(
+                        (acc, product) =>
+                          acc + (product.unitPrice * product.weight || 0),
+                        0
+                      ) -
                       order.orderPayments.reduce(
                         (acc, payment) => acc + payment.paymentAmount || 0,
                         0
-                      )}
+                      )
+                    )
+                      ?.toString()
+                      ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                   </p>
                 </section>
               </section>

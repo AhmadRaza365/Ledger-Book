@@ -95,7 +95,8 @@ function Orders() {
       sortable: false,
       cell: (row: OrderType) => (
         <p className="flex items-center gap-x-1.5 text-base">
-          PKR {row?.totalAmount}
+          PKR{" "}
+          {row?.totalAmount?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
         </p>
       ),
       minWidth: "140px",
@@ -111,7 +112,10 @@ function Orders() {
       sortable: true,
       cell: (row: OrderType) => (
         <p className="flex items-center gap-x-1.5 text-base">
-          PKR {row?.totalAmount - row.paidAmount}
+          PKR{" "}
+          {(row?.totalAmount - row.paidAmount)
+            ?.toString()
+            ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
         </p>
       ),
       minWidth: "200px",
