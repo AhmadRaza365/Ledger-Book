@@ -152,7 +152,7 @@ export default function Customers() {
   const deleteSelectedCustomer = async () => {
     try {
       setDeletingCustomer(true);
-      await DeleteCustomer(selectedCustomer?.id ?? "");
+      await DeleteCustomer(selectedCustomer?.uuid ?? "");
 
       toast.success("Customer deleted successfully");
       setDeletingCustomer(false);

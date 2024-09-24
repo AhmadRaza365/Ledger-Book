@@ -21,11 +21,11 @@ async function GetAllCustomers(): Promise<CustomerType[]> {
   return customers;
 }
 
-async function GetCustomerById(id: string): Promise<CustomerType> {
+async function GetCustomerById(id: string): Promise<CustomerType | null> {
   const q = query(collection(db, "customers"), where("uuid", "==", id));
   const docs = await getDocs(q);
   if (docs.size === 0) {
-    throw new Error("No Customer found with the given ID");
+    return null;
   }
 
   return docs.docs[0].data() as CustomerType;
