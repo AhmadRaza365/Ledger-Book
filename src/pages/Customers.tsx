@@ -66,6 +66,17 @@ export default function Customers() {
       minWidth: "180px",
     },
     {
+      name: <span className="font-bold text-base">Total Orders</span>,
+      selector: (row: CustomerType) => row.orders.length,
+      sortable: false,
+      cell: (row: CustomerType) => (
+        <div className="flex flex-col items-start gap-x-1.5 text-base py-1.5">
+          {row?.orders?.length ?? 0}
+        </div>
+      ),
+      minWidth: "180px",
+    },
+    {
       name: (
         <span className="border-l-[1px] pl-[8px] border-[#D1D1D1] font-bold text-base">
           Action

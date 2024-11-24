@@ -1,43 +1,56 @@
 import Loader from "@/components/Loader";
 import CustomerFormModel from "@/components/models/CustomerFormModel";
 import { Button } from "@/components/ui/button";
-import { GetCustomerById } from "@/lib/Firebase/Services/CustomerService";
 import {
-  DeleteOrder,
-  GetAllOrdersByCustomerId,
-} from "@/lib/Firebase/Services/OrderService";
-import { formatDate } from "@/lib/formatDate";
-import { CustomerType } from "@/types/CustomerType";
-import { OrderType } from "@/types/OrderType";
+  GetCustomerById,
+  UpdateCustomer,
+} from "@/lib/Firebase/Services/CustomerService";
+import {
+  CustomerType,
+  CustomerOrderType,
+  getEmptyCustomerOrder,
+} from "@/types/CustomerType";
 import { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import toast from "react-hot-toast";
-import { AiFillEdit } from "react-icons/ai";
-import { FaEye } from "react-icons/fa";
 import { GoArrowLeft } from "react-icons/go";
-import { MdDelete } from "react-icons/md";
 import { useNavigate, useParams } from "react-router-dom";
 import jsonToCsvExport from "json-to-csv-export";
 import { usePDF } from "react-to-pdf";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { FaPlus } from "react-icons/fa6";
+import { MdDelete } from "react-icons/md";
+import { v4 as uuidv4 } from "uuid";
+import { IoSyncOutline } from "react-icons/io5";
+import { formatDate, formateIntoReadableText } from "@/lib/formatDate";
 
 export default function CustomerDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState<OrderType[]>([]);
+  const [updating, setUpdating] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+
   const [customer, setCustomer] = useState<CustomerType | null>(null);
-
   const [totalOrdersAmount, setTotalOrdersAmount] = useState<number>(0);
-  const [totalRemainingAmount, setTotalRemainingAmount] = useState<number>(0);
+  const [totalCredit, setTotalCredit] = useState<number>(0);
+  const [totalDebit, setTotalDebit] = useState<number>(0);
 
-  const [selectedOrder, setSelectedOrder] = useState<OrderType | null>(null);
+  const [editedOrders, setEditedOrders] = useState<CustomerOrderType[]>([]);
+
+  const [selectedOrder, setSelectedOrder] = useState<CustomerOrderType | null>(
+    null
+  );
   const [showDeleteOrder, setShowDeleteOrder] = useState(false);
   const [deletingOrder, setDeletingOrder] = useState(false);
 
   const [showEditCustomer, setShowEditCustomer] = useState(false);
 
   const { toPDF, targetRef } = usePDF({
-    filename: "customer.pdf",
+    filename: `Customer-${customer?.name ?? "Customer"}-${formatDate({
+      format: "DD-MM-YYYY",
+      unformatedDate: new Date().toISOString(),
+    })}.pdf`,
     page: {
       margin: 14,
       format: "a4",
@@ -49,183 +62,461 @@ export default function CustomerDetails() {
       setLoading(true);
 
       const customerData = await GetCustomerById(customerId);
-      const ordersData = await GetAllOrdersByCustomerId(customerId);
-      calculateSummary(ordersData);
-      setOrders(ordersData);
+      const ordersData = customerData?.orders ?? [];
+
+      setEditedOrders([
+        ...ordersData,
+        {
+          createdAt: new Date().toISOString(),
+          credit: 0,
+          date: "",
+          debit: 0,
+          description: "last_for_summaray",
+          freight: 0,
+          rate: 0,
+          uuid: "",
+          vehicleNo: "",
+          weight: 0,
+        },
+      ]);
       setCustomer(customerData);
+      setLastUpdated(customerData?.updatedAt ?? "");
       setLoading(false);
     } catch (error: any) {
       setLoading(false);
       toast.error(error.message ?? "An error occurred");
       setCustomer(null);
-      setOrders([]);
+      setEditedOrders([]);
     }
   };
 
-  const calculateSummary = (Orders: OrderType[]) => {
-    let total = 0;
-    let remaining = 0;
-    let paid = 0;
+  const calculateSummary = (orders: CustomerOrderType[]) => {
+    const debit = orders.reduce((acc, order) => {
+      return acc + (order.debit ?? 0);
+    }, 0);
 
-    Orders.forEach((order) => {
-      total += order.totalAmount;
-      const totalPaid = order.orderPayments.reduce(
-        (acc, payment) => acc + payment.paymentAmount,
-        0
-      );
-      paid += totalPaid;
-    });
+    const credit = orders.reduce((acc, order) => {
+      return acc + (order.credit ?? 0);
+    }, 0);
 
-    remaining = total - paid;
-
-    setTotalOrdersAmount(total);
-    setTotalRemainingAmount(remaining);
-  };
-
-  const deleteSelectedOrder = async (id: string) => {
-    try {
-      setDeletingOrder(true);
-      await DeleteOrder(id);
-      setDeletingOrder(false);
-      setShowDeleteOrder(false);
-      fetchData(customer?.uuid ?? "");
-      toast.success("Order deleted successfully");
-    } catch (error: any) {
-      setDeletingOrder(false);
-      toast.error(error?.message ?? "Couldn't delete order");
-    }
+    setTotalOrdersAmount(debit + credit);
+    setTotalCredit(credit);
+    setTotalDebit(debit);
   };
 
   useEffect(() => {
     if (id) {
       fetchData(id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  useEffect(() => {
+    calculateSummary(editedOrders);
+  }, [editedOrders]);
 
   const columns = [
     {
-      name: <span className="font-semibold text-base">#</span>,
-      selector: (row: OrderType) => row.orderNo,
-      sortable: true,
-      cell: (row: OrderType) => (
-        <p className="flex items-center gap-x-1.5 text-base">{row.orderNo}</p>
-      ),
-      minWidth: "80px",
-      maxWidth: "80px",
-    },
-    {
       name: <span className="font-semibold text-base">Date</span>,
-      selector: (row: OrderType) => row.orderDate,
-      sortable: true,
-      cell: (row: OrderType) => (
-        <p className="flex items-center gap-x-1.5 text-base">
-          {formatDate({
-            format: "DD MMM YYYY",
-            unformatedDate: row?.orderDate,
-          })}
-        </p>
-      ),
-      minWidth: "120px",
-    },
-    {
-      name: <span className="font-semibold text-base">Due Date</span>,
-      selector: (row: OrderType) => row.dueDate,
-      sortable: true,
-      cell: (row: OrderType) => (
-        <p className="flex items-center gap-x-1.5 text-base">
-          {row.dueDate
-            ? formatDate({
-                format: "DD MMM YYYY",
-                unformatedDate: row?.dueDate,
-              })
-            : "N/A"}
-        </p>
-      ),
-      minWidth: "120px",
-    },
-    {
-      name: <span className="font-semibold text-base">Truck No</span>,
-      selector: (row: OrderType) => row.delivery.deliveryTruckNo,
+      selector: (row: CustomerOrderType) => row.createdAt,
       sortable: false,
-      cell: (row: OrderType) => (
-        <p className="flex items-center gap-x-1.5 text-base">
-          {row?.delivery?.deliveryTruckNo ?? "N/A"}
-        </p>
-      ),
-      minWidth: "110px",
-    },
-    {
-      name: <span className="font-semibold text-base">Total Amount</span>,
-      selector: (row: OrderType) => row.totalAmount,
-      sortable: true,
-      cell: (row: OrderType) => (
-        <p className="flex items-center gap-x-1.5 text-base">
-          PKR{" "}
-          {row?.totalAmount?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-        </p>
-      ),
-      minWidth: "140px",
-    },
-    {
-      name: (
-        <span className="font-semibold text-base text-left">
-          Remaining Amount
-        </span>
-      ),
-      selector: (row: OrderType) => row.totalAmount - row.paidAmount,
-      sortable: true,
-      cell: (row: OrderType) => (
-        <p className="flex items-center gap-x-1.5 text-base">
-          PKR{" "}
-          {(row?.totalAmount - row.paidAmount)
-            ?.toString()
-            ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-        </p>
-      ),
-      minWidth: "200px",
-    },
-    {
-      name: (
-        <span className="border-l-[1px] pl-[8px] border-[#D1D1D1] font-semibold text-base">
-          Action
-        </span>
-      ),
-      cell: (row: OrderType) => {
+      cell: (row: CustomerOrderType, index: number) => {
+        if (row.description === "last_for_summaray") {
+          return <div className="w-full h-[2.6rem] bg-gray-300"></div>;
+        }
         return (
-          <div className="flex items-center gap-x-2">
-            <button
-              className="w-fit h-fit rounded-md bg-primary p-2 text-white"
-              onClick={() => {
-                setSelectedOrder(row);
-                console.log(row);
-                navigate(`/order/${row.uuid}`);
+          <div className="w-full">
+            <DatePicker
+              date={row.date}
+              setDate={(date) => {
+                // Update editedOrders
+                const newOrders = [...editedOrders];
+                newOrders[index].date = date;
+                setEditedOrders(newOrders);
+                saveEditedOrders();
               }}
-            >
-              <FaEye size={20} />
-            </button>
-            <button
-              className="w-fit h-fit rounded-md bg-yellow-500 p-2 text-white"
-              onClick={() => {
-                setSelectedOrder(row);
-                navigate(`/order/update/${row.uuid}`);
+              label=" "
+              stylesForButton="bg-transparent w-full rounded-none border-gray-300 text-base py-2 h-[2.6rem]"
+            />
+          </div>
+        );
+      },
+      minWidth: "120px",
+      maxWidth: "125px",
+    },
+    {
+      name: <span className="font-semibold text-base">Description</span>,
+      selector: (row: CustomerOrderType) => row.description,
+      sortable: false,
+      cell: (row: CustomerOrderType, index: number) => {
+        if (row.description === "last_for_summaray") {
+          return (
+            <div className="w-full h-[2.6rem] bg-gray-300 flex items-center justify-end">
+              <p className="text-base font-bold">Grand Total:</p>
+            </div>
+          );
+        }
+        return (
+          <div className="w-full">
+            <input
+              type="text"
+              value={row.description}
+              onChange={(e) => {
+                const newOrders = [...editedOrders];
+                newOrders[index].description = e.target.value;
+                setEditedOrders(newOrders);
               }}
-            >
-              <AiFillEdit size={20} />
-            </button>
+              onBlur={(e) => {
+                e.preventDefault();
+                saveEditedOrders();
+              }}
+              className="w-full p-2 border border-gray-300 rounded-none text-base"
+              name={`description-${index}`}
+              id={`description-${index}`}
+            />
+          </div>
+        );
+      },
+      minWidth: "250px",
+      grow: 1,
+    },
+    {
+      name: <span className="font-semibold text-base">Vehicle</span>,
+      selector: (row: CustomerOrderType) => row.vehicleNo,
+      sortable: false,
+      cell: (row: CustomerOrderType, index: number) => {
+        if (row.description === "last_for_summaray") {
+          return <div className="w-full h-[2.6rem] bg-gray-300"></div>;
+        }
+        return (
+          <div className="flex">
+            <input
+              type="text"
+              value={row.vehicleNo}
+              onChange={(e) => {
+                const newOrders = [...editedOrders];
+                newOrders[index].vehicleNo = e.target.value;
+                setEditedOrders(newOrders);
+              }}
+              className="w-full p-2 border border-gray-300 rounded-none text-base"
+              name={`vehicle-${index}`}
+              id={`vehicle-${index}`}
+              onBlur={(e) => {
+                e.preventDefault();
+                saveEditedOrders();
+              }}
+            />
+          </div>
+        );
+      },
+      minWidth: "110px",
+      maxWidth: "120px",
+    },
+    {
+      name: <span className="font-semibold text-base">Weight</span>,
+      selector: (row: CustomerOrderType) => row.weight,
+      sortable: false,
+      cell: (row: CustomerOrderType, index: number) => {
+        if (row.description === "last_for_summaray") {
+          const totalWeight = editedOrders.reduce((acc, order) => {
+            return acc + (order?.weight ?? 0);
+          }, 0);
+
+          return (
+            <div className="w-full h-[2.6rem] bg-gray-300 flex items-center pl-2 border-x border-black">
+              <p className="text-base font-semibold">{totalWeight}</p>
+            </div>
+          );
+        }
+
+        return (
+          <div className="flex">
+            <input
+              type="number"
+              defaultValue={row.weight}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+
+                if (value < 0) {
+                  return;
+                }
+
+                const newOrders = [...editedOrders];
+                newOrders[index].weight = Number(e.target.value);
+                setEditedOrders(newOrders);
+              }}
+              className="w-full p-2 border border-gray-300 rounded-none text-base"
+              name={`weight-${index}`}
+              id={`weight-${index}`}
+              onBlur={(e) => {
+                e.preventDefault();
+                saveEditedOrders();
+              }}
+            />
+          </div>
+        );
+      },
+      minWidth: "100px",
+      maxWidth: "105px",
+    },
+    {
+      name: <span className="font-semibold text-base">Rate</span>,
+      selector: (row: CustomerOrderType) => row.rate,
+      sortable: false,
+      cell: (row: CustomerOrderType, index: number) => {
+        if (row.description === "last_for_summaray") {
+          return <div className="w-full h-[2.6rem] bg-gray-300"></div>;
+        }
+        return (
+          <div className="flex">
+            <input
+              type="number"
+              defaultValue={row.rate}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+
+                if (value < 0) {
+                  return;
+                }
+
+                const newOrders = [...editedOrders];
+                newOrders[index].rate = Number(e.target.value);
+                setEditedOrders(newOrders);
+              }}
+              className="w-full p-2 border border-gray-300 rounded-none text-base"
+              name={`rate-${index}`}
+              id={`rate-${index}`}
+              onBlur={(e) => {
+                e.preventDefault();
+                saveEditedOrders();
+              }}
+            />
+          </div>
+        );
+      },
+      minWidth: "100px",
+      maxWidth: "105px",
+    },
+    {
+      name: <span className="font-semibold text-base">Frieght</span>,
+      selector: (row: CustomerOrderType) => row.freight,
+      sortable: false,
+      cell: (row: CustomerOrderType, index: number) => {
+        if (row.description === "last_for_summaray") {
+          return <div className="w-full h-[2.6rem] bg-gray-300"></div>;
+        }
+        return (
+          <div className="flex">
+            <input
+              type="number"
+              defaultValue={row.freight}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+
+                if (value < 0) {
+                  return;
+                }
+
+                const newOrders = [...editedOrders];
+                newOrders[index].freight = Number(e.target.value);
+                setEditedOrders(newOrders);
+              }}
+              className="w-full p-2 border border-gray-300 rounded-none text-base"
+              name={`freight-${index}`}
+              id={`freight-${index}`}
+              onBlur={(e) => {
+                e.preventDefault();
+                saveEditedOrders();
+              }}
+            />
+          </div>
+        );
+      },
+      minWidth: "100px",
+      maxWidth: "105px",
+    },
+    {
+      name: <span className="font-semibold text-base">Debit</span>,
+      selector: (row: CustomerOrderType) => row.debit,
+      sortable: false,
+      cell: (row: CustomerOrderType, index: number) => {
+        if (row.description === "last_for_summaray") {
+          return (
+            <div className="w-full h-[2.6rem] bg-gray-300 flex items-center pl-2 border-x border-black">
+              <p className="text-base font-semibold">
+                {Math.abs(totalDebit).toLocaleString("en-US", {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+            </div>
+          );
+        }
+        return (
+          <div className="flex">
+            <input
+              type="number"
+              defaultValue={row.debit}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+
+                if (value < 0) {
+                  return;
+                }
+
+                const newOrders = [...editedOrders];
+                newOrders[index].debit = Number(e.target.value);
+                setEditedOrders(newOrders);
+              }}
+              className="w-full p-2 border border-gray-300 rounded-none text-base"
+              name={`debit-${index}`}
+              id={`debit-${index}`}
+              onBlur={(e) => {
+                e.preventDefault();
+                saveEditedOrders();
+              }}
+            />
+          </div>
+        );
+      },
+      minWidth: "125px",
+      maxWidth: "130px",
+    },
+    {
+      name: <span className="font-semibold text-base">Credit</span>,
+      selector: (row: CustomerOrderType) => row.credit,
+      sortable: false,
+      cell: (row: CustomerOrderType, index: number) => {
+        if (row.description === "last_for_summaray") {
+          return (
+            <div className="w-full h-[2.6rem] bg-gray-300 flex items-center pl-2 border-x border-black">
+              <p className="text-base font-semibold">
+                {Math.abs(totalCredit).toLocaleString("en-US", {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+            </div>
+          );
+        }
+        return (
+          <div className="flex">
+            <input
+              type="number"
+              defaultValue={row.credit}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+
+                if (value < 0) {
+                  return;
+                }
+
+                const newOrders = [...editedOrders];
+                newOrders[index].credit = Number(e.target.value);
+                setEditedOrders(newOrders);
+              }}
+              className="w-full p-2 border border-gray-300 rounded-none text-base"
+              name={`credit-${index}`}
+              id={`credit-${index}`}
+              onBlur={(e) => {
+                e.preventDefault();
+                saveEditedOrders();
+              }}
+            />
+          </div>
+        );
+      },
+      minWidth: "125px",
+      maxWidth: "130px",
+    },
+    {
+      name: <span className="font-semibold text-base">Balance</span>,
+      selector: (row: CustomerOrderType) => row.uuid,
+      sortable: false,
+      cell: (row: CustomerOrderType, index: number) => {
+        if (row.description === "last_for_summaray") {
+          // Calculate total debit and credit
+          const totalDebit = editedOrders.reduce((acc, order) => {
+            return acc + (order?.debit ?? 0);
+          }, 0);
+
+          const totalCredit = editedOrders.reduce((acc, order) => {
+            return acc + (order?.credit ?? 0);
+          }, 0);
+
+          const total = totalCredit - totalDebit;
+
+          return (
+            <div className="w-full h-[2.6rem] bg-gray-300 flex items-center justify-end pl-2 border-l border-black">
+              <p className="text-base font-semibold">
+                {Math.abs(total).toLocaleString("en-US", {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+              <div className="text-base font-semibold border-l-2 border-black ml-1 pl-1 w-10 h-full text-center align-middle flex items-center justify-center">
+                {total === 0 ? "NIL" : total > 0 ? "Cr." : "Dr."}
+              </div>
+            </div>
+          );
+        } else {
+          // Get Current and all the previous orders from the current order
+          const currentOrder = editedOrders[index];
+          const previousOrders = editedOrders.slice(0, index);
+          const allOrders = [...previousOrders, currentOrder];
+
+          // Calculate total debit and credit
+          const totalDebit = allOrders.reduce((acc, order) => {
+            return acc + (order?.debit ?? 0);
+          }, 0);
+
+          const totalCredit = allOrders.reduce((acc, order) => {
+            return acc + (order?.credit ?? 0);
+          }, 0);
+
+          const total = totalCredit - totalDebit;
+
+          return (
+            <div className="flex justify-end items-center gap-1.5 pr-2 w-full border border-gray-300 h-[2.6rem]">
+              <p className="text-base">
+                {Math.abs(total).toLocaleString("en-US", {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+              <div className="text-base font-medium border-l border-black ml-1 pl-1 w-8 h-full text-center align-middle flex items-center justify-center">
+                {total === 0 ? "NIL" : total > 0 ? "Cr." : "Dr."}
+              </div>
+            </div>
+          );
+        }
+      },
+      minWidth: "140px",
+      maxWidth: "145px",
+    },
+    {
+      name: <span className="font-semibold text-sm opacity-0">A</span>,
+      selector: (row: CustomerOrderType) => row.uuid,
+      sortable: false,
+      cell: (row: CustomerOrderType) => {
+        if (row.description === "last_for_summaray") {
+          return <div className="w-full h-[2.6rem] bg-white"></div>;
+        }
+        return (
+          <div className="flex justify-center items-center w-full pl-2">
             <button
-              className="w-fit h-fit rounded-md bg-red-600 p-2 text-white"
               onClick={() => {
                 setSelectedOrder(row);
                 setShowDeleteOrder(true);
               }}
+              className="text-red-500 w-fit h-fit"
             >
               <MdDelete size={20} />
             </button>
           </div>
         );
       },
-      minWidth: "200px",
+      minWidth: "30px",
+      maxWidth: "30px",
     },
   ];
 
@@ -238,22 +529,83 @@ export default function CustomerDetails() {
     rows: {
       style: {
         backgroundColor: "#FFFFFF",
-        borderBottom: "1px solid #ddd !important",
-        cursor: "pointer",
+        borderBottom: "0px solid #ddd !important",
+        padding: "0px",
+        margin: "0px",
       },
     },
     headRow: {
       style: {
         borderBottom: "1px solid #ddd !important",
-        color: "#06B6D4",
+        color: "#fff",
+        backgroundColor: "#06B6D4",
       },
     },
     cells: {
       style: {
         border: "none",
         color: "#000",
+        padding: "0px",
+        margin: "0px",
       },
     },
+  };
+
+  const saveEditedOrders = async (customList?: CustomerOrderType[]) => {
+    setUpdating(true);
+    const formattedOrders: CustomerOrderType[] = (
+      customList ? customList : editedOrders
+    )
+      .filter((order) => {
+        return (
+          order.date !== "" ||
+          order.description !== "" ||
+          order.vehicleNo !== "" ||
+          order.weight !== 0 ||
+          order.rate !== 0 ||
+          order.freight !== 0 ||
+          order.debit !== 0 ||
+          order.credit !== 0
+        );
+      })
+      .filter((order) => order?.description !== "last_for_summaray")
+      .map((order) => {
+        return {
+          date: order.date ?? "",
+          uuid: order.uuid ?? uuidv4(),
+          description: order.description ?? "",
+          vehicleNo: order.vehicleNo ?? "",
+          weight: order.weight ?? 0,
+          rate: order.rate ?? 0,
+          freight: order.freight ?? 0,
+          debit: order.debit ?? 0,
+          credit: order.credit ?? 0,
+          createdAt: order.createdAt ?? "",
+        };
+      });
+
+    await UpdateCustomer({
+      uuid: customer?.uuid ?? uuidv4(),
+      id: customer?.id ?? uuidv4(),
+      name: customer?.name ?? "",
+      phoneNo: customer?.phoneNo ?? [],
+      address: customer?.address ?? "",
+      orders: formattedOrders,
+      updatedAt: new Date().toISOString(),
+    });
+
+    setLastUpdated(new Date().toISOString());
+    setUpdating(false);
+  };
+
+  const removeRow = (uuid: string) => {
+    const newOrders = editedOrders.filter((order) => order.uuid !== uuid);
+    setEditedOrders(newOrders);
+    setDeletingOrder(false);
+    setShowDeleteOrder(false);
+    setTimeout(() => {
+      saveEditedOrders(newOrders);
+    }, 1000);
   };
 
   return (
@@ -262,20 +614,23 @@ export default function CustomerDetails() {
         <section className="col-span-full w-full h-96 py-20 flex items-center justify-center text-lg gap-x-2">
           <Loader width={50} borderWidth={3} color="primary" />
         </section>
-      ) : orders && customer ? (
+      ) : customer ? (
         <>
-          <section className="flex items-center gap-x-2">
-            <button
-              className="w-fit h-fit cursor-pointer -mb-1"
-              onClick={() => {
-                navigate("/customers");
-              }}
-            >
-              <GoArrowLeft size={30} />
-            </button>
-            <h1 className="text-2xl font-semibold">
-              Customer Details - {customer.name}
-            </h1>
+          <section className="flex flex-col md:flex-row items-start md:items-center gap-2">
+            <div className="flex items-center gap-2">
+
+              <button
+                className="w-fit h-fit cursor-pointer -mb-1"
+                onClick={() => {
+                  navigate("/customers");
+                }}
+              >
+                <GoArrowLeft size={30} />
+              </button>
+              <h1 className="text-2xl font-semibold">
+                Customer Details - {customer.name}
+              </h1>
+            </div>
 
             <div className="ml-auto flex items-center gap-3">
               <Button
@@ -331,61 +686,117 @@ export default function CustomerDetails() {
                 <h2 className="text-xl font-semibold mb-2">Summary</h2>
                 <p className="text-lg font-normal">
                   <span className="font-semibold">Total Orders: </span>
-                  {orders.length}
+                  {editedOrders.length}
                 </p>
                 <p className="text-lg font-normal">
                   <span className="font-semibold">Total Orders Amount: </span>
                   PKR{" "}
-                  {totalOrdersAmount
-                    ?.toString()
-                    ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                  {totalOrdersAmount?.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
                 </p>
                 <p className="text-lg font-normal">
-                  <span className="font-semibold">
-                    Total Remaining Amount:{" "}
-                  </span>
+                  <span className="font-semibold">Total Debit Amount: </span>
                   PKR{" "}
-                  {totalRemainingAmount
-                    ?.toString()
-                    ?.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                  {Math.abs(totalDebit)?.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
+                </p>
+                <p className="text-lg font-normal">
+                  <span className="font-semibold">Total Credit Amount: </span>
+                  PKR{" "}
+                  {Math.abs(totalCredit)?.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
+                </p>
+                <p className="text-lg font-normal">
+                  <span className="font-semibold">Total Balance:</span>
+                  PKR{" "}
+                  {Math.abs(totalCredit - totalDebit)?.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
                 </p>
               </section>
             </section>
 
             {/* Orders */}
             <section className="col-span-full border w-full flex flex-col gap-4 px-5 pt-4 pb-6 rounded-lg shadow-md">
-              <section className="flex items-center gap-4">
+              <section className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex items-center gap-4">
                 <h2 className="text-xl font-semibold">Customer's Orders</h2>
                 <Button
                   size={"sm"}
                   onClick={() => {
                     const config = {
-                      data: orders.map((order) => ({
-                        ID: order.orderNo,
-                        Date: formatDate({
-                          format: "DD MMM YYYY",
-                          unformatedDate: order.orderDate,
+                      data: editedOrders
+                        .filter(
+                          (order) => order.description !== "last_for_summaray"
+                        )
+                        .filter(
+                          (order) =>
+                            order.date !== "" ||
+                            order.description !== "" ||
+                            order.vehicleNo !== "" ||
+                            order.weight !== 0 ||
+                            order.rate !== 0 ||
+                            order.freight !== 0 ||
+                            order.debit !== 0 ||
+                            order.credit !== 0
+                        )
+                        .map((order, index) => {
+                          const currentOrder = order;
+                          const previousOrders = editedOrders.slice(0, index);
+                          const allOrders = [...previousOrders, currentOrder];
+
+                          // Calculate total debit and credit
+                          const totalDebit = allOrders.reduce((acc, order) => {
+                            return acc + (order?.debit ?? 0);
+                          }, 0);
+
+                          const totalCredit = allOrders.reduce((acc, order) => {
+                            return acc + (order?.credit ?? 0);
+                          }, 0);
+
+                          const total = totalCredit - totalDebit;
+
+                          return {
+                            Date: order.date,
+                            "Customer Name": customer.name,
+                            "Phone No": customer.phoneNo.join(", "),
+                            Description: order.description,
+                            Vehicle: order.vehicleNo,
+                            Weight: order.weight ?? 0,
+                            Rate: order.rate ?? 0,
+                            Freight: order.freight ?? 0,
+                            Debit: order.debit ?? 0,
+                            Credit: order.credit ?? 0,
+                            Balance: `${total} - ${total === 0 ? "NIL" : total > 0 ? "Cr." : "Dr."
+                              }`,
+                          };
                         }),
-                        "Customer Name": order.customerName,
-                        "Phone No": order.customerPhoneNo[0],
-                        "Truck No": order.delivery.deliveryTruckNo,
-                        "Total Amount": order.totalAmount,
-                        "Remaining Amount":
-                          order.totalAmount - order.paidAmount,
-                      })),
-                      filename: `Customer-${customer.name}-Orders`,
+                      filename: `Customer-${customer.name}-Orders-${formatDate({
+                        format: "DD-MM-YYYY",
+                        unformatedDate: new Date().toISOString(),
+                      })}`,
                       delimiter: ",",
                       headers: [
-                        "ID",
                         "Date",
                         "Customer Name",
                         "Phone No",
-                        "Truck No",
-                        "Total Amount",
-                        "Remaining Amount",
+                        "Description",
+                        "Vehicle",
+                        "Weight",
+                        "Rate",
+                        "Freight",
+                        "Debit",
+                        "Credit",
+                        "Balance",
                       ],
                     };
-
                     jsonToCsvExport(config);
                   }}
                   variant={"outline"}
@@ -393,11 +804,30 @@ export default function CustomerDetails() {
                 >
                   Download CSV
                 </Button>
+                </div>
+
+                <button
+                  className="flex items-center justify-center gap-1.5 w-fit ml-auto"
+                  disabled={updating}
+                  onClick={() => {
+                    saveEditedOrders();
+                  }}
+                >
+                  {updating
+                    ? "Updating"
+                    : `Last updated: ${formateIntoReadableText(
+                      lastUpdated ?? ""
+                    )}`}
+                  <IoSyncOutline
+                    size={20}
+                    className={`${updating ? "animate-spin" : ""}`}
+                  />
+                </button>
               </section>
               <section className="w-full mt-0">
                 <DataTable
                   columns={columns}
-                  data={orders}
+                  data={editedOrders}
                   customStyles={customStyles}
                   progressPending={loading}
                   progressComponent={
@@ -413,13 +843,25 @@ export default function CustomerDetails() {
                       </p>
                     </div>
                   }
-                  highlightOnHover
-                  striped
-                  pagination
-                  onRowClicked={(row: OrderType) => {
-                    navigate(`/order/${row.uuid}`);
-                  }}
+                  highlightOnHover={false}
+                  striped={false}
+                  pagination={false}
                 />
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full mt-3"
+                  onClick={() => {
+                    const newOrder = getEmptyCustomerOrder();
+                    // Add new order at last 2nd index
+                    const newOrders = [...editedOrders];
+                    newOrders.splice(newOrders.length - 1, 0, newOrder);
+                    setEditedOrders(newOrders);
+                  }}
+                >
+                  <FaPlus className="mr-1" size={12} />
+                  Add New Order
+                </Button>
               </section>
             </section>
           </section>
@@ -451,8 +893,7 @@ export default function CustomerDetails() {
                 size={"lg"}
                 variant={"destructive"}
                 onClick={() => {
-                  deleteSelectedOrder(selectedOrder.uuid);
-                  setDeletingOrder(true);
+                  removeRow(selectedOrder.uuid);
                 }}
                 disabled={deletingOrder}
                 loading={deletingOrder}

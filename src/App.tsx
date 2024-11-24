@@ -1,16 +1,10 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
-import Home from "./pages/Home";
 import DashboardLayout from "@/components/DashboardLayout";
-// import Orders from "./pages/Orders";
-// import CreateOrder from "./pages/CreateOrder";
-// import OrderDetails from "./pages/OrderDetails";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { GetUserData, Logout } from "@/lib/Firebase/Services/Auth";
 import { toast } from "sonner";
-// import Users from "./pages/Users";
-import { UserType } from "@/types/UserType";
 import { auth } from "@/lib/Firebase/firebase";
 import { CheckIfUserIsFirstUser } from "./lib/Firebase/Services/OnBoard";
 import {
@@ -22,10 +16,6 @@ import { useDispatch, useSelector } from "react-redux";
 import OnBoardingModel from "@/components/models/OnBoardingModel";
 import Loader from "./components/Loader";
 import Customers from "./pages/Customers";
-import Orders from "./pages/Orders";
-import AddNewOrder from "./pages/AddNewOrder";
-import OrderDetails from "./pages/OrderDetails";
-import UpdateOrderPage from "./pages/UpdateOrderPage";
 import CustomerDetails from "./pages/CustomerDetails";
 
 function App() {
@@ -36,10 +26,7 @@ function App() {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [fetchingUserData, setFetchingUserData] = useState(true);
-  const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
-
-  console.log(user);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -47,19 +34,17 @@ function App() {
       if (user) {
         GetUserData(user.uid)
           .then((res: any) => {
+            console.log(res);
             setIsLoggedIn(true);
             setFetchingUserData(false);
-            setUser(res.userData);
           })
           .catch((error: any) => {
-            setUser(null);
             setIsLoggedIn(false);
             setFetchingUserData(false);
             Logout();
             toast.error(error.message ?? "An error occurred");
           });
       } else {
-        setUser(null);
         setIsLoggedIn(false);
         setFetchingUserData(false);
       }
@@ -131,52 +116,8 @@ function App() {
               path="/"
               element={
                 <DashboardLayout
-                  pageName="Home"
-                  children={<Home />}
-                  isLoggedin={isLoggedIn}
-                  fetchingUserData={fetchingUserData}
-                />
-              }
-            />
-            <Route
-              path="/orders"
-              element={
-                <DashboardLayout
-                  pageName="Orders"
-                  children={<Orders />}
-                  isLoggedin={isLoggedIn}
-                  fetchingUserData={fetchingUserData}
-                />
-              }
-            />
-            <Route
-              path="/order/:id"
-              element={
-                <DashboardLayout
-                  pageName="Orders"
-                  children={<OrderDetails />}
-                  isLoggedin={isLoggedIn}
-                  fetchingUserData={fetchingUserData}
-                />
-              }
-            />
-            <Route
-              path="/order/update/:id"
-              element={
-                <DashboardLayout
-                  pageName="Orders"
-                  children={<UpdateOrderPage />}
-                  isLoggedin={isLoggedIn}
-                  fetchingUserData={fetchingUserData}
-                />
-              }
-            />
-            <Route
-              path="/order/new"
-              element={
-                <DashboardLayout
-                  pageName="Add New Order"
-                  children={<AddNewOrder />}
+                  pageName="Customers"
+                  children={<Customers />}
                   isLoggedin={isLoggedIn}
                   fetchingUserData={fetchingUserData}
                 />
@@ -194,7 +135,7 @@ function App() {
                 />
               }
             />
-            
+
             <Route
               path="/customer/:id"
               element={
@@ -206,19 +147,6 @@ function App() {
                 />
               }
             />
-
-            {/* <Route
-              path="/users"
-              element={
-                <DashboardLayout
-                  pageName="Users"
-                  // children={<Users />}
-                  children={<h1>Users</h1>}
-                  isLoggedin={isLoggedIn}
-                  fetchingUserData={fetchingUserData}
-                />
-              }
-            /> */}
           </Routes>
 
           {showOnBoarding && (

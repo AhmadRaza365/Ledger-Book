@@ -42,6 +42,8 @@ function CustomerFormModel({
         name: name,
         address: address,
         phoneNo: phoneNo,
+        orders: customer?.orders ?? [],
+        updatedAt: new Date().toISOString(),
       });
 
       toast.success("Customer added successfully");
@@ -63,6 +65,8 @@ function CustomerFormModel({
         name: name,
         address: address,
         phoneNo: phoneNo,
+        orders: customer?.orders ?? [],
+        updatedAt: new Date().toISOString(),
       });
 
       toast.success("Customer updated successfully");
